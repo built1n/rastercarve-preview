@@ -7,15 +7,16 @@ add_library(core
   )
 
 add_subdirectory(gpr)
+add_subdirectory(libfml)
 
 # Main entry point.
 add_executable(rastercarve-preview
   ./src/main.cpp)
 
 target_link_libraries(rastercarve-preview
-  core gpr)
+  core gpr fml)
 
-include_directories(gpr/src)
+include_directories(gpr/src libfml/include)
 
 # Add flags.
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -std=c++11")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -std=c++11 -O3")

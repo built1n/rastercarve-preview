@@ -1,3 +1,6 @@
 [submodule "gpr"]
 	path = gpr
 	url = https://github.com/dillonhuff/gpr
+[submodule "libfml"]
+	path = libfml
+	url = https://github.com/built1n/libfml

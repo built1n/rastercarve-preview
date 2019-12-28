@@ -2,13 +2,16 @@
 
 This program generates SVG previews of engraving G-code toolpaths. It
 was designed for use with
-[rastercarve](https://www.github.com/built1n/rastercarve), but should
+[rastercarve](https://github.com/built1n/rastercarve), but should
 be applicable with any such toolpath.
+
+It uses [Dillon Huff's](https://github.com/dillonhuff) excellent
+G-code parser, [gpr](https://github.com/dillonhuff).
 
 ## Requirements
 
-- 'git'
-- 'cmake'
+- git
+- cmake
 - C++11 compiler (any recent GCC or clang will do)
 
 ## Installation
