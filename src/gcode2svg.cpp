@@ -71,7 +71,7 @@ void render_dots(std::ostream &out, std::vector<stroke_pt> &stroke) {
     }
 }
 
-void render_traps(std::ostream &out, std::vector<stroke_pt> &stroke) {
+void render_traps(std::ostream &out, std::vector<stroke_pt> &stroke, bool round_ends = true) {
     if(stroke.size() == 1) // single point -- use a circle insted
     {
         render_dots(out, stroke);
@@ -101,23 +101,29 @@ void render_traps(std::ostream &out, std::vector<stroke_pt> &stroke) {
     for(unsigned int i = 0; i < pos_side.size(); i++)
         out << (i ? "L" : "M") << pos_side[i][0] << " " << pos_side[i][1] << "\n";
 
-//#if 0
-    vec2 cap = neg_side[neg_side.size() - 1] - pos_side[pos_side.size() - 1];
-    double r = cap.magnitude() / 2;
+    vec2 cap;
+    double r;
 
-    svg_path_arc(out,
-                 r, r, 0, false, false,
-                 cap[0], cap[1], true);
-//#endif
-    for(unsigned int i = neg_side.size() - 1; i > 0; i--)
+    if(round_ends) {
+        cap = neg_side[neg_side.size() - 1] - pos_side[pos_side.size() - 1];
+        r = cap.magnitude() / 2;
+
+        svg_path_arc(out,
+                     r, r, 0, false, false,
+                     cap[0], cap[1], true);
+    }
+
+    for(unsigned int i = neg_side.size() - 2; i > 0; i--)
         out << "L" << neg_side[i - 1][0] << " " << neg_side[i - 1][1] << "\n";
 
-    cap = pos_side[0] - neg_side[0];
-    r = cap.magnitude() / 2;
+    if(round_ends) {
+        cap = pos_side[0] - neg_side[0];
+        r = cap.magnitude() / 2;
 
-    svg_path_arc(out,
-                 r, r, 0, false, false,
-                 cap[0], cap[1], true);
+        svg_path_arc(out,
+                     r, r, 0, false, false,
+                     cap[0], cap[1], true);
+    }
 
     out << "\" />\n";
 }
