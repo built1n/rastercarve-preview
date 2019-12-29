@@ -134,8 +134,7 @@ void render_full(std::ostream &out, std::vector<stroke_pt> &stroke) {
     }
 }
 
-void gcode2svg(std::istream &in, std::ostream &out) {
-    const int tool_angle = 30;
+void gcode2svg(std::istream &in, std::ostream &out, double tool_angle) {
     const int ppi = 100;
 
     const double deg2rad = M_PI / 180;
