@@ -196,7 +196,7 @@ void gcode2svg(std::istream &in, std::ostream &out, double tool_angle) {
             z = map_getdefault(addrs, 'Z', z);
 
             path.push_back(vec3(x,y,z));
-            std::cerr << x << " " << y << " " << z << std::endl;
+            //std::cerr << x << " " << y << " " << z << std::endl;
 
             // get max/min
             if(x > w)
