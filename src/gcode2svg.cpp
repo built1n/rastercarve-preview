@@ -65,6 +65,10 @@ typedef struct stroke_pt {
     double r; // thickness
 } stroke_pt;
 
+bool operator==(stroke_pt &a, stroke_pt &b) {
+    return a.pos[0] == b.pos[0] && a.pos[1] == b.pos[1] && a.r == b.r;
+}
+
 void render_dots(std::ostream &out, std::vector<stroke_pt> &stroke) {
     for(auto pt : stroke) {
         svg_circle(out, pt.pos[0], pt.pos[1], pt.r); // half for radius
@@ -113,7 +117,7 @@ void render_traps(std::ostream &out, std::vector<stroke_pt> &stroke, bool round_
                      cap[0], cap[1], true);
     }
 
-    for(unsigned int i = neg_side.size() - 2; i > 0; i--)
+    for(unsigned int i = neg_side.size() - 1; i > 0; i--)
         out << "L" << neg_side[i - 1][0] << " " << neg_side[i - 1][1] << "\n";
 
     if(round_ends) {
@@ -132,6 +136,11 @@ void render_traps(std::ostream &out, std::vector<stroke_pt> &stroke, bool round_
 void render_full(std::ostream &out, std::vector<stroke_pt> &stroke) {
     for(auto pt : stroke) {
     }
+}
+
+double map_getdefault(std::map<char, double> m, char key, double def) {
+    std::map<char, double>::iterator it = m.find(key);
+    return (it == m.end()) ? def : it->second;
 }
 
 void gcode2svg(std::istream &in, std::ostream &out, double tool_angle) {
@@ -180,11 +189,14 @@ void gcode2svg(std::istream &in, std::ostream &out, double tool_angle) {
         if(g_addr >= 0)
         {
             // we have a move command - process it and render svg as necessary
-            double x, y, z;
-            x = addrs['X'];
-            y = addrs['Y'];
-            z = addrs['Z'];
+            static double x = 0, y = 0, z = 0; // remember last position
+
+            x = map_getdefault(addrs, 'X', x);
+            y = map_getdefault(addrs, 'Y', y);
+            z = map_getdefault(addrs, 'Z', z);
+
             path.push_back(vec3(x,y,z));
+            std::cerr << x << " " << y << " " << z << std::endl;
 
             // get max/min
             if(x > w)
@@ -212,7 +224,8 @@ void gcode2svg(std::istream &in, std::ostream &out, double tool_angle) {
 
             stroke_pt pt = { vec2(x_px, y_px), r_px };
 
-            stroke.push_back(pt);
+            if(stroke.size() == 0 || !(pt == stroke.back())) // avoid duplicates
+                stroke.push_back(pt);
         }
         else if(z >= 0 and last_z < 0) // end stroke
         {
