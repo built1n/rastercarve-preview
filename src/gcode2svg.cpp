@@ -33,9 +33,13 @@ using namespace fml;
 
 enum { DOTS, TRAPEZOIDS, FULL } render_mode = TRAPEZOIDS;
 
+const bool pretty = false;
+
 void svg_header(std::ostream &out, double w, double h) {
     out << "<?xml version=\"1.0\"?>";
-    out << "<svg xmlns=\"http://www.w3.org/2000/svg\" height=\"" << h << "\" width=\"" << w << "\">\n";
+    out << "<svg xmlns=\"http://www.w3.org/2000/svg\" height=\"" << h << "\" width=\"" << w << "\">";
+    if(pretty)
+        out << "\n";
     //out << "<svg xmlns=\"http://www.w3.org/2000/svg\">\n";
 }
 
@@ -44,7 +48,9 @@ void svg_footer(std::ostream &out) {
 }
 
 void svg_circle(std::ostream &out, double cx, double cy, double r) {
-    out << "<circle cx=\"" << cx << "\" cy=\"" << cy << "\" r=\"" << r << "\"/>\n";
+    out << "<circle cx=\"" << cx << "\" cy=\"" << cy << "\" r=\"" << r << "\"/>";
+    if(pretty)
+        out << "\n";
 }
 
 void svg_path_arc(std::ostream &out,
@@ -103,7 +109,7 @@ void render_traps(std::ostream &out, std::vector<stroke_pt> &stroke, bool round_
     out << "<path d=\"";
 
     for(unsigned int i = 0; i < pos_side.size(); i++)
-        out << (i ? "L" : "M") << pos_side[i][0] << " " << pos_side[i][1] << "\n";
+        out << (i ? "L" : "M") << pos_side[i][0] << " " << pos_side[i][1] << (pretty ? "\n" : "");
 
     vec2 cap;
     double r;
@@ -118,7 +124,7 @@ void render_traps(std::ostream &out, std::vector<stroke_pt> &stroke, bool round_
     }
 
     for(unsigned int i = neg_side.size() - 1; i > 0; i--)
-        out << "L" << neg_side[i - 1][0] << " " << neg_side[i - 1][1] << "\n";
+        out << "L" << neg_side[i - 1][0] << " " << neg_side[i - 1][1] << (pretty ? "\n" : "");
 
     if(round_ends) {
         cap = pos_side[0] - neg_side[0];
@@ -129,7 +135,7 @@ void render_traps(std::ostream &out, std::vector<stroke_pt> &stroke, bool round_
                      cap[0], cap[1], true);
     }
 
-    out << "\" />\n";
+    out << "\"/>" << (pretty ? "\n" : "");
 }
 
 // not implemented
@@ -206,6 +212,8 @@ void gcode2svg(std::istream &in, std::ostream &out, double tool_angle) {
         }
     }
 
+    out << std::fixed;
+    out.precision(1);
     svg_header(out, w * ppi, h * ppi);
 
     for(vec3 pt : path) {
