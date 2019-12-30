@@ -33,10 +33,10 @@ using namespace fml;
 
 enum { DOTS, TRAPEZOIDS, FULL } render_mode = TRAPEZOIDS;
 
-void svg_header(std::ostream &out) {
+void svg_header(std::ostream &out, double w, double h) {
     out << "<?xml version=\"1.0\"?>";
-    //out << "<svg xmlns=\"http://www.w3.org/2000/svg\" height=\"" << h << "\" width=\"" << w << "\">\n";
-    out << "<svg xmlns=\"http://www.w3.org/2000/svg\">\n";
+    out << "<svg xmlns=\"http://www.w3.org/2000/svg\" height=\"" << h << "\" width=\"" << w << "\">\n";
+    //out << "<svg xmlns=\"http://www.w3.org/2000/svg\">\n";
 }
 
 void svg_footer(std::ostream &out) {
@@ -140,11 +140,15 @@ void gcode2svg(std::istream &in, std::ostream &out, double tool_angle) {
     const double deg2rad = M_PI / 180;
     const double depth2width = 2 * tan(tool_angle / 2 * deg2rad);
 
-    svg_header(out);
-
     std::string s_in(std::istreambuf_iterator<char>(in), {});
 
     gcode_program prog = parse_gcode(s_in);
+
+    // get vector of 3-vectors describing path
+    std::vector<vec3> path;
+
+    // also get dimensions (max x and min y) for svg header while we're at it
+    double w = 0, h = 0;
 
     for(auto block : prog) {
         std::map<char, double> addrs; // map of [XYZF]->double addresses
@@ -180,40 +184,53 @@ void gcode2svg(std::istream &in, std::ostream &out, double tool_angle) {
             x = addrs['X'];
             y = addrs['Y'];
             z = addrs['Z'];
+            path.push_back(vec3(x,y,z));
 
-            static double last_z = 1; // assume we start out of the material
-            static std::vector<stroke_pt> stroke;
-
-            if(z < 0)
-            {
-                //if(last_z > 0) // begin stroke
-                //    stroke = std::vector<stroke_pt>();
-                double r_px = -z * ppi * depth2width / 2;
-
-                double x_px = x * ppi, y_px = -y * ppi; // negate y
-
-                stroke_pt pt = { vec2(x_px, y_px), r_px };
-
-                stroke.push_back(pt);
-            }
-            else if(z >= 0 and last_z < 0) // end stroke
-            {
-                switch(render_mode) {
-                case DOTS:
-                    render_dots(out, stroke);
-                    break;
-                case TRAPEZOIDS:
-                    render_traps(out, stroke);
-                    break;
-                case FULL:
-                    render_full(out, stroke);
-                    break;
-                }
-                stroke = std::vector<stroke_pt>();
-            }
-
-            last_z = z;
+            // get max/min
+            if(x > w)
+                w = x;
+            if(-y > h)
+                h = -y;
         }
+    }
+
+    svg_header(out, w * ppi, h * ppi);
+
+    for(vec3 pt : path) {
+        double x = pt[0], y = pt[1], z = pt[2];
+
+        static double last_z = 1; // assume we start out of the material
+        static std::vector<stroke_pt> stroke;
+
+        if(z < 0)
+        {
+            //if(last_z > 0) // begin stroke
+            //    stroke = std::vector<stroke_pt>();
+            double r_px = -z * ppi * depth2width / 2;
+
+            double x_px = x * ppi, y_px = -y * ppi; // negate y
+
+            stroke_pt pt = { vec2(x_px, y_px), r_px };
+
+            stroke.push_back(pt);
+        }
+        else if(z >= 0 and last_z < 0) // end stroke
+        {
+            switch(render_mode) {
+            case DOTS:
+                render_dots(out, stroke);
+                break;
+            case TRAPEZOIDS:
+                render_traps(out, stroke);
+                break;
+            case FULL:
+                render_full(out, stroke);
+                break;
+            }
+            stroke = std::vector<stroke_pt>();
+        }
+
+        last_z = z;
     }
 
     svg_footer(out);
